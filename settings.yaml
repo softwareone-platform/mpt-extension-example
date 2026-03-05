@@ -1,0 +1,7 @@
+env_domain: "s1.show"
+base_url: "@format https://api.{this.env_domain}/public/v1"
+extension_id: "EXT-0190-5415"
+extension_domain: "@format ext.{this.env_domain}"
+extension_fqdn: "@jinja {{this.extension_id | lower}}.{{this.extension_domain}}"
+product_id: PRD-1512-9546
+rows_per_page: 50
