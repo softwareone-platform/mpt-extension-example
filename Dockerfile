@@ -25,7 +25,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin/:$PATH"
 
 # Install the project into `/app`
-WORKDIR /app
+WORKDIR /workspace
 
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1
@@ -33,7 +33,8 @@ ENV UV_COMPILE_BYTECODE=1
 # Copy from the cache instead of linking since it's a mounted volume
 ENV UV_LINK_MODE=copy
 
-ENV UV_PROJECT=/app/backend
+ENV UV_PROJECT=/workspace/backend
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 
 # Install the project's dependencies using the lockfile and settings
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -45,8 +46,8 @@ RUN echo 'alias pip="uv pip"' >> ~/.bashrc
 
 # Then, add the rest of the project source code and install it
 # Installing separately from its dependencies allows optimal layer caching
-COPY . /app
+COPY . /workspace
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
 
-ENV PATH="/app/backend/.venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:$PATH"

@@ -2,7 +2,14 @@ services:
   app:
     build:
       context: .
-    working_dir: /app
+    working_dir: /workspace
     volumes:
-      - .:/app
+      - .:/workspace
+    command: runext
+  bash:
+    build:
+      context: .
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
     command: /bin/bash

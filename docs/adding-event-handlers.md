@@ -6,9 +6,9 @@ This guide explains how to add new event handlers to your extension to receive a
 
 Event handlers allow your extension to react to changes in the SoftwareOne Marketplace Platform. When a business object (order, subscription, agreement, etc.) changes state, the platform can notify your extension by sending an event to a designated endpoint.
 
-## Step 1: Register the Event in manifest.yaml
+## Step 1: Register the Event in meta.yaml
 
-First, declare the event subscription in your [manifest.yaml](../manifest.yaml) file under the `events` section:
+First, declare the event subscription in your [meta.yaml](../meta.yaml) file under the `events` section:
 
 ```yaml
 events:
@@ -103,7 +103,7 @@ async def process_order(event: Event):
     return EventResponse.ok()
 ```
 
-The endpoint path must match the `path` specified in `manifest.yaml`.
+The endpoint path must match the `path` specified in `meta.yaml`.
 
 ## Step 3: Understand Request and Response Models
 
@@ -186,7 +186,7 @@ class EventResponse(BaseSchema):
 
 ## Complete Example
 
-### manifest.yaml
+### meta.yaml
 
 ```yaml
 events:
@@ -251,11 +251,11 @@ async def process_subscription_event(event: Event):
 - **Event not received**: Check that the `event` key matches the platform event name exactly
 - **All events received**: Verify your `condition` filter syntax
 - **Settings not interpolated**: Ensure `settings.yaml` contains the referenced values
-- **Path mismatch**: Confirm the `path` in manifest matches the route decorator in api.py
+- **Path mismatch**: Confirm the `path` in meta matches the route decorator in api.py
 
 ## See Also
 
 - [Project Structure](project-structure.md) — Understanding the codebase layout
-- [manifest.yaml](../manifest.yaml) — Event configuration reference
+- [meta.yaml](../meta.yaml) — Event configuration reference
 - [schema.py](../backend/app/schema.py) — Complete model definitions
 - [api.py](../backend/app/api.py) — API implementation examples

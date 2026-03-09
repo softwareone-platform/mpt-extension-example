@@ -8,28 +8,25 @@ from app.config import settings
 from app.schema import AuthContext as _AuthContext
 from app.utils import get_jwt_token_claims
 
-
-
 security = HTTPBearer()
 
 
 async def resolve_installation(account_id: str) -> str:
     query = f"and(eq(account.id,{account_id}),eq(status,Installed))"
-    url = f"integration/extensions/{settings.extension_id}/installations?{query}"
-    response = httpx.get(
-        f"{settings.base_url}/{url}",
-        headers={"Authorization": f"Bearer {settings.api_key}"}
-    )
-    response.raise_for_status()
-    data = response.json()
-    return data["data"][0]["id"]
-
+    url = f"/integration/extensions/{settings.extension_id}/installations?{query}"
+    async with httpx.AsyncClient(
+        base_url=settings.base_url,
+        headers={"Authorization": f"Bearer {settings.api_key}"},
+    ) as client:
+        response = await client.get(url)
+        response.raise_for_status()
+        data = response.json()
+        return data["data"][0]["id"]
 
 
 async def get_auth_context(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)]
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
 ) -> _AuthContext:
-
     token = credentials.credentials
 
     claims = get_jwt_token_claims(token)

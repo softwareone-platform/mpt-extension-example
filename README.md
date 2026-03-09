@@ -13,7 +13,11 @@ To develop/run this extension you can choose between two different options:
          ```bash
          docker compose build app
          ```
-     - Run the app service (it starts a bash shell in the container):
+     - Enter the bash shell of the container for development purposes:
+         ```bash
+         docker compose run --rm bash
+         ```
+     - Run the extension application:
          ```bash
          docker compose run --rm app
          ```
@@ -69,6 +73,27 @@ Start the extension using:
 runext
 ```
 
+### Run mrok Development Console
+
+Once the extension started you can run the mrok Development Console to spy the traffic.
+In a new terminal window run:
+
+```bash
+mrok agent dev console
+```
+
+![mrok dev console](docs/assets/mrok_dev_console.png)
+
+
+You can also run the web version or the development console:
+
+```bash
+mrok agent dev web
+```
+
+
+
+
 ## Project Structure
 
 The complete repository structure has been moved to [docs/project-structure.md](docs/project-structure.md) to keep this README concise.
@@ -79,7 +104,7 @@ High-level layout:
 - `frontend/`: UI source and build config (file layout may evolve)
 - `static/`: generated frontend bundles served by backend
 - `docs/`: additional technical documentation
-- root config files: `manifest.yaml`, `settings.yaml`, `compose.yaml`, `Dockerfile`, `identity.json`
+- root config files: `meta.yaml`, `settings.yaml`, `compose.yaml`, `Dockerfile`, `identity.json`
 
 ### Key Components
 
@@ -100,7 +125,7 @@ High-level layout:
 - Built bundles are placed in `/static` for serving by the backend
 
 **Configuration**
-- `manifest.yaml`: Jinja2 template declaring extension capabilities, hooks, events, and plugs. Supports dynamic values from `settings.yaml`
+- `meta.yaml`: Jinja2 template declaring extension capabilities, hooks, events, and plugs. Supports dynamic values from `settings.yaml`
 - `settings.yaml`: Public configuration values (extension_id, product_id, API endpoints, domain settings). Defaults target production; change `env_domain` for dev/test/staging.
 - `.secrets.yaml`: Sensitive data like API keys and secrets (must be created locally, never committed)
 
@@ -112,3 +137,4 @@ High-level layout:
 
 - [Adding Event Handlers](docs/adding-event-handlers.md) — Subscribe to and process platform events
 - [Project Structure](docs/project-structure.md) — Detailed repository layout and file organization
+- [Project Settings](docs/settings.md) — Detailed docs about project settings.

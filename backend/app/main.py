@@ -1,17 +1,16 @@
 import json
 import logging
 import logging.config
-
 from pathlib import Path
 from typing import Annotated
 
 import httpx
-from mrok.agent import ziticorn
 import typer
+from mrok.agent import ziticorn
 
 from app.config import settings
 from app.logging import get_logging_config
-from app.utils import get_instance_external_id, get_manifest
+from app.utils import get_instance_external_id, get_meta
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +111,7 @@ def main(
 ):
     logging_config = get_logging_config()
     logging.config.dictConfig(logging_config)
+
     if not settings.get("extension_id"):
         raise Exception("No Extension ID has been provided.")
     if not settings.get("base_url"):
@@ -134,11 +134,11 @@ def main(
 
 
 
-    data = {"externalId": external_id, "meta": get_manifest()}
+    data = {"externalId": external_id, "meta": get_meta()}
     for evtinfo in data["meta"]["events"]:
         msg = (
             f"Register event subscription to {evtinfo['event']} "
-            f"(task={evtinfo['task']}, filter={evtinfo.get('filter', '-')}) "
+            f"(task={evtinfo['task']}, filter={evtinfo.get('condition', '-')}) "
             f"-> {evtinfo['path']}"
         )
         logger.info(msg)
