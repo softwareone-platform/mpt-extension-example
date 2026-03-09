@@ -49,8 +49,8 @@ def get_instance_external_id():
         return f"{uuid.getnode():012x}"
 
 
-def get_manifest():
-    template = _JINJA_ENV.get_template("manifest.yaml")
+def get_meta():
+    template = _JINJA_ENV.get_template("meta.yaml")
     return safe_load(template.render(settings=settings))
 
 
