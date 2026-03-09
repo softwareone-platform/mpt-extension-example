@@ -1,0 +1,16 @@
+# Auto detect text files and normalize line endings to LF
+* text=auto
+
+# Shell scripts must have LF
+*.sh eol=lf
+Dockerfile eol=lf
+*.bash eol=lf
+
+# Python files
+*.py eol=lf
+pyproject.toml eol=lf
+
+# Config files  
+*.yaml eol=lf
+*.yml eol=lf
+*.json eol=lf
