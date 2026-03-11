@@ -11,7 +11,7 @@ To develop/run this extension you can choose between two different options:
 1. Docker (using [compose.yaml](compose.yaml))
      - Build the app service:
          ```bash
-         docker compose build app
+         docker compose build
          ```
      - Enter the bash shell of the container for development purposes:
          ```bash
@@ -135,6 +135,7 @@ High-level layout:
 
 ## Developer Guides
 
-- [Adding Event Handlers](docs/adding-event-handlers.md) — Subscribe to and process platform events
-- [Project Structure](docs/project-structure.md) — Detailed repository layout and file organization
 - [Project Settings](docs/settings.md) — Detailed docs about project settings.
+- [Injectable Dependencies](docs/injectable-dependencies.md) — FastAPI injectable dependencies
+- [Project Structure](docs/project-structure.md) — Detailed repository layout and file organization
+- [Adding Event Handlers](docs/adding-event-handlers.md) — Subscribe to and process platform events

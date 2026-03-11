@@ -174,7 +174,7 @@ class EventResponse(BaseSchema):
    return EventResponse.ok()
    ```
 
-2. **Delay** — Retry the event after a specified delay (in seconds)
+2. **Reschedule** — Retry the event after a specified delay (in seconds)
    ```python
    return EventResponse.reschedule(seconds=300)  # Retry in 5 minutes
    ```
@@ -227,7 +227,7 @@ async def process_subscription_event(event: Event):
         
     except TemporaryError:
         # Retry in 5 minutes
-        return EventResponse.delay(seconds=300)
+        return EventResponse.reschedule(seconds=300)
         
     except PermanentError:
         # Don't retry

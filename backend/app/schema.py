@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -140,11 +140,11 @@ class EventResponse(BaseSchema):
     @classmethod
     def ok(cls):
         return cls(response="OK")
-    
+
     @classmethod
     def cancel(cls):
         return cls(response="Cancel")
-    
+
     @classmethod
     def reschedule(cls, seconds: int | None = None):
         return cls(response="Delay", delay=seconds)
