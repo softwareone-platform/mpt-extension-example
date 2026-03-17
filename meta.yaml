@@ -22,3 +22,9 @@ deferrables:
   - path: "/api/v1/tasks/synchronize"
     method: GET
     description: "Run a background synchronization task"
+schedules:
+  - path: /api/v1/cron/dojob
+    id: my.cron.job
+    name: "My cron job"
+    description: "Test cron job"
+    cron: "* * * * *"

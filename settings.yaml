@@ -4,4 +4,5 @@ extension_id: "EXT-0190-5415"
 extension_domain: "@format ext.{this.env_domain}"
 extension_fqdn: "@jinja {{this.extension_id | lower}}.{{this.extension_domain}}"
 product_id: PRD-1512-9546
+my_account_id: ACC-7499-7833
 rows_per_page: 50
