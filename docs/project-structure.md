@@ -29,8 +29,15 @@ backend/
 └── app/
     ├── __init__.py
     ├── main.py              # Extension bootstrap and CLI entry point
-    ├── extension.py         # FastAPI app setup and static mounting
-    ├── api.py               # API routes/webhooks
+    ├── extension.py         # FastAPI app setup, router mounting, and static serving
+    ├── routers/             # FastAPI routers, one file per endpoint category
+    │   ├── __init__.py
+    │   ├── api.py           # Authenticated REST endpoints  (prefix /api/v1)
+    │   ├── bypass.py        # Unauthenticated / internal endpoints  (prefix /bypass)
+    │   ├── deferreds.py     # Deferred background-task handlers  (prefix /deferreds)
+    │   ├── events.py        # Platform event handlers  (prefix /events)
+    │   ├── schedules.py     # Scheduled / cron-job handlers  (prefix /schedules)
+    │   └── webhooks.py      # Validation webhook handlers  (prefix /webhooks)
     ├── auth.py              # Authentication context management
     ├── client.py            # Marketplace API client
     ├── config.py            # Settings loading and config handling
