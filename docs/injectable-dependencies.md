@@ -1,6 +1,6 @@
 # Injectable Dependencies
 
-This extension provides two key injectable dependencies for use in FastAPI route handlers: `AuthContext` and `InstallationClient`.
+This extension provides three key injectable dependencies for use in FastAPI route handlers: `AuthContext`, `InstallationClient`, and `ExtensionClient`.
 
 ## AuthContext
 
@@ -39,16 +39,15 @@ The `AuthContext` dependency:
 
 ## InstallationClient
 
-The `InstallationClient` dependency provides an authenticated HTTP client configured for the current installation's scope.
+The `InstallationClient` dependency provides an authenticated HTTP client configured for the current installation's scope. It acts on behalf of a specific customer installation.
 
 ### Usage
 
 ```python
-from app.auth import AuthContext
 from app.client import InstallationClient
 
 @router.get("/management/whoami")
-async def whoami(ctx: AuthContext, client: InstallationClient):
+async def whoami(client: InstallationClient, ctx: AuthContext):
     account = await client.get_account(ctx.account_id)
     user = None if not ctx.user_id else await client.get_user(ctx.user_id)
     token = None if not ctx.token_id else await client.get_token(ctx.token_id)
@@ -60,29 +59,30 @@ async def whoami(ctx: AuthContext, client: InstallationClient):
     }
 ```
 
-### How It Works
+See [MPT Client](mpt-client.md) for detailed information on usage, extending the client, and other available methods.
 
-The `InstallationClient`:
+## ExtensionClient
 
-1. Depends on `AuthContext` to get the `installation_id`
-2. Creates or retrieves a cached `MPTClient` instance for that installation
-3. Automatically handles token acquisition and refresh using the installation scope
-4. Authenticates all requests with installation-scoped tokens
-5. Provides a clean API for common Marketplace API operations
+The `ExtensionClient` dependency provides an authenticated HTTP client configured for the vendor scope. It acts on behalf of the extension itself, not a specific installation.
 
-### Authentication Flow
+### Usage
 
-The client implements automatic token management:
+```python
+from app.client import ExtensionClient
 
-1. On first request, obtains an installation-scoped token from the Marketplace API
-2. Caches the token and tracks its expiration
-3. Automatically refreshes expired tokens before making requests
-4. All API calls are authenticated in the context of the specific installation
+@router.get("/vendor-data")
+async def vendor_endpoint(client: ExtensionClient):
+    # Authenticate as the extension vendor
+    user = await client.get_user(user_id)
+    return user
+```
 
+See [MPT Client](mpt-client.md) for detailed information on usage, extending the client, and other available methods.
 
-## Why Two Dependencies?
+## Why Three Dependencies?
 
 - **`AuthContext`**: Provides "who is making the request" information
-- **`InstallationClient`**: Provides "how to call the API on behalf of this installation" functionality
+- **`InstallationClient`**: Provides "how to call the API on behalf of a specific customer installation" functionality
+- **`ExtensionClient`**: Provides "how to call the API on behalf of the extension vendor" functionality
 
-They work together: `AuthContext` identifies the caller, and `InstallationClient` uses that identity to create an authenticated API client scoped to the correct account/installation.
+They work together: `AuthContext` identifies the caller, `InstallationClient` uses that identity to create an authorization-scoped API client, and `ExtensionClient` operates at the vendor level without customer context.

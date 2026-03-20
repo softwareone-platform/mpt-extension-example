@@ -3,7 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.api import router
+from app.routers import api, bypass, deferreds, events, schedules, webhooks
 
 app = FastAPI(
     title="SoftwareOne Marketplace Extension Example",
@@ -24,4 +24,5 @@ app.mount(
     name="static",
 )
 
-app.include_router(router)
+for router_module in (api, bypass, deferreds, events, schedules, webhooks):
+    app.include_router(router_module.router)

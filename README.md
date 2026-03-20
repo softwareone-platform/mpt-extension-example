@@ -104,14 +104,14 @@ High-level layout:
 - `frontend/`: UI source and build config (file layout may evolve)
 - `static/`: generated frontend bundles served by backend
 - `docs/`: additional technical documentation
-- root config files: `meta.yaml`, `settings.yaml`, `compose.yaml`, `Dockerfile`, `identity.json`
+- root config files: `meta.yaml`, `settings.yaml`, `compose.yaml`, `Dockerfile`
 
 ### Key Components
 
 **Backend (FastAPI)**
 - `main.py`: Bootstrap entry point that initializes and runs the extension via `runext` CLI
 - `extension.py`: Declares the FastAPI application instance and mounts static file serving for frontend assets
-- `api.py`: Defines API routes and webhook handlers for platform events and validations
+- `routers`: Defines API routes and handlers for platform events, webhooks, deferreds and schedules
 - `config.py`: Manages settings loading from `settings.yaml` and environment variables
 - `schema.py`: Pydantic models for type-safe request/response validation
 - `auth.py`: FastAPI dependency to inject the authentication context into the endpoint handlers.

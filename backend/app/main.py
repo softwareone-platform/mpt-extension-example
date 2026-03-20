@@ -33,7 +33,7 @@ def main(
         typer.Option(
             "--server-workers",
             "-w",
-            help=f"Number of workers.",
+            help="Number of workers.",
             show_default=True,
         ),
     ] = 4,

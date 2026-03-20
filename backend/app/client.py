@@ -207,6 +207,9 @@ class MPTClient:
     async def complete_task(self, task_id: str, payload: dict | None = None) -> dict[str, Any]:
         return await self.run_object_action("system/tasks", task_id, "complete", payload=payload)
 
+    async def reschedule_task(self, task_id: str) -> dict[str, Any]:
+        return await self.run_object_action("system/tasks", task_id, "reschedule")
+
     def get_orders(
         self, query: str | None = None, select: list[str] | None = None
     ) -> AsyncGenerator[dict[str, Any], None]:
