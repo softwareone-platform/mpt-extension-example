@@ -3,7 +3,14 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.routers import api, bypass, deferreds, events, schedules, webhooks
+from app.schema import ExtensionContext
+from app.routers import api, bypass, events
+
+
+def lifespan(app: FastAPI):
+    app.app.state.ctx = ExtensionContext.from_identity_file()
+    yield
+
 
 app = FastAPI(
     title="SoftwareOne Marketplace Extension Example",
@@ -13,6 +20,7 @@ app = FastAPI(
     openapi_url="/bypass/openapi.json",
     docs_url="/bypass/docs",
     redoc_url="/bypass/redoc",
+    lifespan=lifespan,
 )
 
 app.mount(
@@ -24,5 +32,5 @@ app.mount(
     name="static",
 )
 
-for router_module in (api, bypass, deferreds, events, schedules, webhooks):
+for router_module in (api, bypass, events):
     app.include_router(router_module.router)

@@ -54,7 +54,6 @@ The `event` key follows a dotted notation pattern:
 ```yaml
 platform.commerce.order.created
 platform.commerce.subscription.status_changed
-platform.accounts.agreement.updated
 platform.catalog.product.deleted
 ```
 
@@ -193,11 +192,11 @@ class EventResponse(BaseSchema):
 
 ## Event Handling Patterns
 
-The platform waits for a response to event handlers for 30–60 seconds before timing out. Choose your pattern based on how long work takes.
+The platform waits for a response to event handlers for 100 seconds before timing out. Choose your pattern based on how long work takes.
 
 ### Pattern 1: Quick Fulfillment (Sync)
 
-Use this pattern when work completes within the response timeout (30–60 seconds).
+Use this pattern when work completes within the response timeout (100 seconds).
 
 **meta.yaml**
 
@@ -214,18 +213,18 @@ events:
 ```python
 import logging
 
-from app.auth import AuthContext
-from app.client import ExtensionClient, InstallationClient
+from app.dependencies import AuthContext, ExtensionClient, ExtensionContext, InstallationClient
 from app.config import settings
 from app.schema import Event, EventResponse
 
 logger = logging.getLogger(__name__)
-
+router = APIRouter(prefix="/events")
 
 @router.post("/orders")
 async def process_order(
     event: Event,
     ctx: AuthContext,
+    ext_ctx: ExtensionContext,
     client: InstallationClient,
     ext_client: ExtensionClient,
 ) -> EventResponse:
@@ -234,7 +233,7 @@ async def process_order(
     task_id = event.task.id
 
     # 1. Start task
-    await ext_client.start_task(task_id)
+    await ext_client.start_task(task_id, ext_ctx.instance_id)
 
     try:
         # 2. Fetch order
@@ -290,18 +289,19 @@ events:
 ```python
 import logging
 
-from app.auth import AuthContext
-from app.client import ExtensionClient, InstallationClient
+from app.dependencies import AuthContext, ExtensionClient, ExtensionContext, InstallationClient
 from app.config import settings
 from app.schema import Event, EventResponse
 
 logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/events")
 
 
 @router.post("/orders")
 async def process_order(
     event: Event,
     ctx: AuthContext,
+    ext_ctx: ExtensionContext,
     client: InstallationClient,
     ext_client: ExtensionClient,
 ) -> EventResponse:
@@ -310,7 +310,7 @@ async def process_order(
     task_id = event.task.id
 
     # 1. Start task
-    await ext_client.start_task(task_id)
+    await ext_client.start_task(task_id, ext_ctx.instance_id)
 
     try:
         # 2. Fetch order
@@ -376,7 +376,7 @@ async def process_order(
 1. **Respect the timeout** — handlers have 30–60 seconds before the platform times out.
    - Quick work: complete synchronously and return `ok()`.
    - Slow work: `reschedule()` to resume later in another invocation.
-2. **Always start the task** — call `ext_client.start_task(task_id)` at the beginning.
+2. **Always start the task** — call `ext_client.start_task(task_id, ext_ctx.instance_id)` at the beginning.
 3. **Complete the task** — call `ext_client.complete_task(task_id)` when work finishes successfully.
 4. **Report progress** — call `ext_client.update_task(task_id, payload={"progress": 0-100})` during work.
 5. **Check state before acting** — order status, client readiness, etc. The same event may be delivered multiple times (see Pattern 2).

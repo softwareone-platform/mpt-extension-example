@@ -27,7 +27,7 @@ def main(
             help="Timeout (ms) waiting for Ziti to load.",
             show_default=True,
         ),
-    ] = 5000,
+    ] = 10_000,
     server_workers: Annotated[
         int,
         typer.Option(

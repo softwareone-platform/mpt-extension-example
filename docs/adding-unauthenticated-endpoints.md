@@ -72,7 +72,7 @@ async def health_check() -> HealthResponse:
 ### Admin trigger (extension-scoped, no caller auth)
 
 ```python
-from app.client import ExtensionClient
+from app.dependencies import ExtensionClient
 from app.schema import BaseSchema
 
 

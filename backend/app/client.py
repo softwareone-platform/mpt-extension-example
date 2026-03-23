@@ -1,16 +1,41 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from functools import cache, cached_property
-from typing import Annotated, Any
+from typing import Any
 
 import httpx
-from fastapi import Depends
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential,
+)
 
-from app.auth import AuthContext
 from app.config import settings
 from app.utils import get_jwt_token_expires
+
+logger = logging.getLogger(__name__)
+
+
+def _is_transient_error(exc: Exception) -> bool:
+    """Check if exception is a transient error worth retrying."""
+    if isinstance(exc, (httpx.TimeoutException, httpx.ConnectError)):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code in (502, 503, 504)
+    return False
+
+
+RETRY_TRANSIENT = dict(
+    stop=stop_after_attempt(4),
+    wait=wait_exponential(multiplier=1, min=1, max=32),
+    retry=retry_if_exception(_is_transient_error),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+)
 
 
 class TokenInfo:
@@ -29,6 +54,7 @@ class MPTInstallationAuth(httpx.Auth):
         self.account_id = account_id
         self.token_info: TokenInfo | None = None
 
+    @retry(**RETRY_TRANSIENT)
     async def async_auth_flow(
         self, request: httpx.Request
     ) -> AsyncGenerator[httpx.Request, httpx.Response]:
@@ -84,6 +110,7 @@ class MPTClient:
             ),
         )
 
+    @retry(**RETRY_TRANSIENT)
     async def get(
         self,
         endpoint: str,
@@ -92,7 +119,7 @@ class MPTClient:
     ) -> dict[str, Any]:
         url = f"{endpoint}/{id}"
         if select:
-            url = f"{url}?select={','.join(select)}"
+            url = f"{url}?select={','.join(select or [])}"
         response = await self.httpx_client.get(url)
         try:
             response.raise_for_status()
@@ -139,6 +166,7 @@ class MPTClient:
         finally:
             await response.aclose()
 
+    @retry(**RETRY_TRANSIENT)
     async def get_page(
         self,
         endpoint: str,
@@ -149,7 +177,7 @@ class MPTClient:
     ) -> dict[str, Any]:
         rql = None
         if query or select:
-            rql = f"{query or ''}&select={','.join(select)}"
+            rql = f"{query or ''}&select={','.join(select or [])}"
         url = f"{endpoint}?{rql or ''}&limit={limit}&offset={offset}"
 
         response = await self.httpx_client.get(url)
@@ -159,6 +187,30 @@ class MPTClient:
             return page
         finally:
             await response.aclose()
+
+    async def count(
+        self,
+        endpoint: str,
+        query: str | None = None,
+    ) -> dict[str, Any]:
+        page = await self.get_page(endpoint, limit=0, offset=0, query=query)
+        return page["$meta"]["pagination"]["total"]
+
+    async def first(
+        self,
+        endpoint: str,
+        query: str | None = None,
+        select: list[str] | None = None,
+    ) -> dict[str, Any] | None:
+        items = await self.get_page(
+            endpoint,
+            limit=1,
+            offset=0,
+            query=query,
+            select=select,
+        )
+        if items["data"]:
+            return items["data"][0]
 
     async def collection_iterator(
         self,
@@ -201,8 +253,11 @@ class MPTClient:
     async def update_task(self, task_id: str, payload: dict) -> dict[str, Any]:
         return await self.update("system/tasks", task_id, payload=payload)
 
-    async def start_task(self, task_id: str) -> dict[str, Any]:
-        return await self.run_object_action("system/tasks", task_id, "execute")
+    async def start_task(self, task_id: str, instance_id: str) -> dict[str, Any]:
+        task = await self.run_object_action("system/tasks", task_id, "execute")
+        params = task["parameters"]
+        params["instanceId"] = instance_id.upper()
+        return await self.update_task(task_id, {"parameters": params})
 
     async def complete_task(self, task_id: str, payload: dict | None = None) -> dict[str, Any]:
         return await self.run_object_action("system/tasks", task_id, "complete", payload=payload)
@@ -219,13 +274,3 @@ class MPTClient:
 @cache
 def get_installation_client(account_id: str) -> MPTClient:
     return MPTClient(MPTInstallationAuth(account_id))
-
-
-def _get_installation_client(ctx: AuthContext) -> MPTClient:
-    return get_installation_client(ctx.account_id)
-
-def _get_extension_client() -> MPTClient:
-    return MPTClient(MPTExtensionAuth())
-
-InstallationClient = Annotated[MPTClient, Depends(_get_installation_client)]
-ExtensionClient = Annotated[MPTClient, Depends(_get_extension_client)]

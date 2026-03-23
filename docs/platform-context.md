@@ -12,8 +12,6 @@ A Marketplace Extension is a FastAPI web service that the SoftwareOne Marketplac
 invokes to hook into commerce workflows. The extension:
 
 - **Receives events** when platform objects change state (orders, subscriptions, agreements, …).
-- **Validates webhooks** before the platform commits a business operation.
-- **Runs background tasks** triggered by the platform (deferrables, schedules).
 - **Exposes a REST API** consumed by the platform UI or external clients.
 - **Renders UI sockets** via frontend bundles served as static assets.
 
@@ -26,13 +24,14 @@ backend/app/       — FastAPI service (stable)
   routers/         — One module per endpoint category (see below)
   auth.py          — JWT → AuthContext dependency
   client.py        — InstallationClient / ExtensionClient HTTP clients
+  dependencies.py  — AuthContext / ExtensionContext / client dependencies
   config.py        — Dynaconf settings (settings.yaml + EXT_* env vars)
   extension.py     — FastAPI app, router mounting, static file serving
   schema.py        — Pydantic models shared across all routers
   main.py          — CLI entry point (runext)
 frontend/          — TypeScript/SCSS source (build output → static/)
 static/            — Generated frontend bundles (do not hand-edit)
-meta.yaml          — Extension manifest (events, webhooks, deferreds, schedules, plugs)
+meta.yaml          — Extension manifest (events, plugs)
 settings.yaml      — Public configuration (env-overridable via EXT_* prefix)
 .secrets.yaml      — Private secrets — git-ignored, never commit
 ```
@@ -48,9 +47,6 @@ Each endpoint category lives in its own router module and has a dedicated URL pr
 | Router file | Prefix | Declared in meta.yaml | Purpose |
 |-------------|--------|-----------------------|---------|
 | `routers/events.py` | `/events` | `events[].path` | Platform event handlers |
-| `routers/webhooks.py` | `/webhooks` | `webhooks[].path` | Synchronous validation webhooks |
-| `routers/deferreds.py` | `/deferreds` | `deferrables[].path` | Asynchronous background tasks — triggered by sending `MPT-async: true`; platform returns `MPT-Task-Id` to the caller and forwards it as a request header when invoking the handler |
-| `routers/schedules.py` | `/schedules` | `schedules[].path` | Cron-scheduled jobs |
 | `routers/api.py` | `/api/v1` | not declared | Authenticated REST endpoints |
 | `routers/bypass.py` | `/bypass` | not declared | Unauthenticated / internal endpoints |
 
@@ -62,8 +58,7 @@ handlers to `api.py` or REST endpoints to `events.py`.
 ## meta.yaml and Router Alignment
 
 `meta.yaml` is a Jinja2 template that declares extension capabilities to the platform.
-The `path` field for events, webhooks, deferrables, and schedules **must** equal the router
-prefix plus the route decorator path.
+The `path` field for events **must** equal the router prefix plus the route decorator path.
 
 ```yaml
 # meta.yaml — declare the capability
@@ -137,7 +132,7 @@ An authenticated `httpx.AsyncClient` scoped to the current installation.
 Tokens are acquired and refreshed automatically.
 
 ```python
-from app.client import InstallationClient
+from app.dependencies import InstallationClient
 
 @router.get("/management/account")
 async def get_account(ctx: AuthContext, client: InstallationClient) -> dict:
@@ -153,45 +148,43 @@ Use this for operations that do not belong to a specific installation, such as
 listing all installations or admin-level lookups.
 
 ```python
-from app.client import ExtensionClient
+from app.dependencies import ExtensionClient
 
 @router.post("/bypass/admin/reset")
 async def reset(client: ExtensionClient) -> dict:
     return await client.list_installations()
 ```
 
----
+### ExtensionContext
 
-### Deferred task lifecycle
-
-When a deferred handler is invoked, follow this sequence inside the background worker:
-
-1. `ext_client.start_task(task_id)` — mark the task as in-progress.
-2. `ext_client.update_task(task_id, payload={"progress": 50})` — report progress as an integer 0–100 at suitable intervals.
-3. `ext_client.reschedule_task(task_id)` - mark the task as rescheduled.
-3. `ext_client.complete_task(task_id)` — mark the task as done.
-
-If work fails, call `ext_client.update_task(task_id, payload={"error": str(exc)})` before returning `reschedule()` or `cancel()`.
-
-Use FastAPI `BackgroundTasks` so the handler returns `EventResponse.ok()` immediately and the platform does not time out waiting for the work to finish:
+Runtime metadata for the running extension instance, injected as a dependency.
+Use this when you need values such as the current `instance_id`.
 
 ```python
-from fastapi import BackgroundTasks, Request
+from app.dependencies import ExtensionContext
 
-@router.post("/reports/generate")
-async def generate_report(
-    request: Request,
-    background_tasks: BackgroundTasks,
-    ext_client: ExtensionClient,
-) -> EventResponse:
-    task_id = request.headers["MPT-Task-Id"]
-    background_tasks.add_task(_do_generate, task_id, ext_client)
+@router.post("/events/orders")
+async def process_order(ext_ctx: ExtensionContext) -> EventResponse:
+    instance_id = ext_ctx.instance_id
     return EventResponse.ok()
 ```
 
-## Response Lifecycle for Events, Webhooks, and Tasks
+---
 
-All platform-facing handlers (events, webhooks, deferrables, schedules) return an
+### Event task lifecycle
+
+When an event handler runs with `task: true`, follow this sequence:
+
+1. `ext_client.start_task(task_id, ext_ctx.instance_id)` — mark the task as in-progress for the current extension instance.
+2. `ext_client.update_task(task_id, payload={"progress": 50})` — report progress as an integer 0–100 at suitable intervals.
+3. `ext_client.reschedule_task(task_id)` - mark the task as rescheduled.
+4. `ext_client.complete_task(task_id)` — mark the task as done.
+
+If work fails, call `ext_client.update_task(task_id, payload={"error": str(exc)})` before returning `reschedule()` or `cancel()`.
+
+## Response Lifecycle for Events and Tasks
+
+Platform-facing event handlers return an
 `EventResponse` that tells the platform what to do next:
 
 ```python
@@ -255,9 +248,6 @@ mrok agent dev web       # spy extension traffic in browser
 | Task | Guide |
 |------|-------|
 | React to a platform event | [adding-event-handlers.md](adding-event-handlers.md) |
-| Validate before a platform operation | [adding-webhook-handlers.md](adding-webhook-handlers.md) |
-| Run a background task | [adding-deferred-handlers.md](adding-deferred-handlers.md) |
-| Schedule a recurring job | [adding-scheduled-handlers.md](adding-scheduled-handlers.md) |
 | Add an authenticated REST endpoint | [adding-api-endpoints.md](adding-api-endpoints.md) |
 | Add an unauthenticated / internal endpoint | [adding-unauthenticated-endpoints.md](adding-unauthenticated-endpoints.md) |
 
@@ -267,7 +257,7 @@ mrok agent dev web       # spy extension traffic in browser
 
 | Pitfall | Consequence | Fix |
 |---------|-------------|-----|
-| `meta.yaml` path ≠ router URL | Events / webhooks silently not delivered | Align `path` with prefix + decorator |
+| `meta.yaml` path ≠ router URL | Events silently not delivered | Align `path` with prefix + decorator |
 | Hardcoded API URL or key | Broken in other environments, security risk | Use `settings.*` or `EXT_*` env vars |
 | Using `requests` instead of `InstallationClient` | Blocking I/O in async context | Use the injected `client` dependency |
 | Sync handler in async FastAPI app | Thread-pool exhaustion | Mark all handlers `async def` |

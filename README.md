@@ -70,8 +70,9 @@ uv sync
 
 Start the extension using:
 ```bash
-runext
+uv run runext
 ```
+
 
 ### Run mrok Development Console
 
@@ -92,8 +93,6 @@ mrok agent dev web
 ```
 
 
-
-
 ## Project Structure
 
 The complete repository structure has been moved to [docs/project-structure.md](docs/project-structure.md) to keep this README concise.
@@ -111,7 +110,7 @@ High-level layout:
 **Backend (FastAPI)**
 - `main.py`: Bootstrap entry point that initializes and runs the extension via `runext` CLI
 - `extension.py`: Declares the FastAPI application instance and mounts static file serving for frontend assets
-- `routers`: Defines API routes and handlers for platform events, webhooks, deferreds and schedules
+- `routers`: Defines API routes and handlers for platform events, authenticated endpoints, and internal bypass endpoints
 - `config.py`: Manages settings loading from `settings.yaml` and environment variables
 - `schema.py`: Pydantic models for type-safe request/response validation
 - `auth.py`: FastAPI dependency to inject the authentication context into the endpoint handlers.

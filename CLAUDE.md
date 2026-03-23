@@ -15,12 +15,9 @@ Reference document for Claude Code agents working in this repository.
 
 ## Architecture
 
-- `backend/app/` is the stable core of the extension: `config.py` loads settings, `auth.py` and `client.py` provide request-scoped dependencies, `schema.py` defines request and response models, `extension.py` mounts the FastAPI app, and `routers/` contains one module per endpoint category.
+- `backend/app/` is the stable core of the extension: `config.py` loads settings, `dependencies.py` provides request-scoped dependencies, `client.py` provides Marketplace API clients, `schema.py` defines request and response models, `extension.py` mounts the FastAPI app, and `routers/` contains one module per endpoint category.
 - Each router module owns a distinct endpoint category:
   - `routers/events.py` (prefix `/events`) — platform event handlers
-  - `routers/webhooks.py` (prefix `/webhooks`) — validation webhooks
-  - `routers/deferreds.py` (prefix `/deferreds`) — deferred background tasks
-  - `routers/schedules.py` (prefix `/schedules`) — scheduled cron jobs
   - `routers/api.py` (prefix `/api/v1`) — authenticated REST endpoints
   - `routers/bypass.py` (prefix `/bypass`) — unauthenticated / internal endpoints
 - `meta.yaml` and the matching router file must stay aligned. The `path` in `meta.yaml` must equal the router prefix plus the route decorator path. Always update both in the same change.
@@ -88,8 +85,5 @@ mrok agent dev web
 | AuthContext + Clients (Installation & Extension) | `docs/injectable-dependencies.md` |
 | MPT Client and extending with custom methods | `docs/mpt-client.md` |
 | Adding event handlers | `docs/adding-event-handlers.md` |
-| Adding webhook handlers | `docs/adding-webhook-handlers.md` |
-| Adding deferred handlers | `docs/adding-deferred-handlers.md` |
-| Adding scheduled handlers | `docs/adding-scheduled-handlers.md` |
 | Adding authenticated REST endpoints | `docs/adding-api-endpoints.md` |
 | Adding unauthenticated endpoints | `docs/adding-unauthenticated-endpoints.md` |
