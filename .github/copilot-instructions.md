@@ -9,9 +9,9 @@
 
 ## Architecture
 
-- `backend/app/` is the stable core of the extension: `config.py` loads settings, `auth.py` and `client.py` provide request-scoped dependencies, `schema.py` defines request and response models, `extension.py` mounts the FastAPI app, and `routers/` contains one module per endpoint category.
-- Each router module owns a distinct endpoint category — `routers/events.py` (prefix `/events`) for platform events, `routers/webhooks.py` (prefix `/webhooks`) for validation webhooks, `routers/deferreds.py` (prefix `/deferreds`) for deferred background tasks, `routers/schedules.py` (prefix `/schedules`) for scheduled jobs, `routers/api.py` (prefix `/api/v1`) for authenticated REST endpoints, and `routers/bypass.py` (prefix `/bypass`) for unauthenticated/internal endpoints. Add handlers to the matching router, never mix categories.
-- `meta.yaml` and the matching router file must stay aligned. When adding or changing events, webhooks, deferrables, or schedules, update both the manifest path and the matching `@router` decorator in the same change. The `path` in `meta.yaml` must equal the router prefix plus the route decorator path.
+- `backend/app/` is the stable core of the extension: `config.py` loads settings, `dependencies.py` exposes request-scoped dependencies, `client.py` provides Marketplace HTTP clients, `schema.py` defines request and response models, `extension.py` mounts the FastAPI app, and `routers/` contains one module per endpoint category.
+- Each router module owns a distinct endpoint category — `routers/events.py` (prefix `/events`) for platform events, `routers/api.py` (prefix `/api/v1`) for authenticated REST endpoints, and `routers/bypass.py` (prefix `/bypass`) for unauthenticated/internal endpoints. Add handlers to the matching router, never mix categories.
+- `meta.yaml` and the matching router file must stay aligned. When adding or changing events, update both the manifest path and the matching `@router` decorator in the same change. The `path` in `meta.yaml` must equal the router prefix plus the route decorator path.
 - `frontend/` is the source area for UI code, and `static/` is generated build output served by the backend at `/static`. Do not hand-edit `static/` unless the task is explicitly about generated assets.
 
 ## Code Style
@@ -30,6 +30,6 @@
 
 ## Conventions
 
-- Treat the docs as the source of truth for extension patterns: see `docs/project-structure.md`, `docs/settings.md`, `docs/platform-context.md`, `docs/injectable-dependencies.md`, `docs/mpt-client.md`, `docs/adding-event-handlers.md`, `docs/adding-webhook-handlers.md`, `docs/adding-deferred-handlers.md`, `docs/adding-scheduled-handlers.md`, `docs/adding-api-endpoints.md`, and `docs/adding-unauthenticated-endpoints.md`.
+- Treat the docs as the source of truth for extension patterns: see `docs/project-structure.md`, `docs/settings.md`, `docs/platform-context.md`, `docs/injectable-dependencies.md`, `docs/mpt-client.md`, `docs/adding-event-handlers.md`, `docs/adding-api-endpoints.md`, and `docs/adding-unauthenticated-endpoints.md`.
 - Keep route handlers async and use typed Pydantic models from `app.schema`. Extend existing schema patterns before introducing new request or response shapes.
 - Generated or local-only files should stay out of source edits unless required by the task: `.secrets.yaml`, `*_identity.json`, and `static/` are not the primary source files.

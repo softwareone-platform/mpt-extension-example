@@ -7,7 +7,8 @@ that present a valid JWT token issued by the SoftwareOne Marketplace.
 ## Checklist
 
 - [ ] Add the handler in `backend/app/routers/api.py`.
-- [ ] Inject `AuthContext` for identity and `InstallationClient` for API access.
+- [ ] Inject `AuthContext` for caller identity.
+- [ ] Inject `ExtensionContext` for extension runtime metadata.
 - [ ] Define request/response shapes as Pydantic models in `backend/app/schema.py` (or reuse existing ones).
 - [ ] Keep the handler `async` and return a typed response model.
 - [ ] Follow Python 3.12 type annotations.
@@ -21,32 +22,25 @@ Authenticated endpoints live under the `/api/v1` prefix in
 must carry a valid `Authorization: Bearer <token>` header.  The `AuthContext` dependency
 decodes the JWT and resolves the installation automatically.
 
-Unlike events, webhooks, deferrables, and schedules, these endpoints are **not** declared in
+Unlike event handlers, these endpoints are **not** declared in
 `meta.yaml` — they are plain FastAPI routes called directly by clients.
 
 ## Adding a Handler in routers/api.py
 
 ```python
-from app.auth import AuthContext
-from app.client import InstallationClient
-from app.schema import BaseSchema
+from app.dependencies import AuthContext, ExtensionContext
 
 # router is defined at module level with prefix="/api/v1"
 
-class WhoAmIResponse(BaseSchema):
-    account_id: str
-    account_type: str
-    installation_id: str
-
-
-@router.get("/management/whoami")  # full path: /api/v1/management/whoami
-async def whoami(ctx: AuthContext, client: InstallationClient) -> WhoAmIResponse:
-    """Return identity information for the authenticated caller."""
-    return WhoAmIResponse(
-        account_id=ctx.account_id,
-        account_type=ctx.account_type,
-        installation_id=ctx.installation_id,
-    )
+@router.get("/me")  # full path: /api/v1/me
+async def who_am_i(
+    auth_ctx: AuthContext,
+    ext_ctx: ExtensionContext,
+):
+    return {
+        "auth": auth_ctx.model_dump(),
+        "ext": ext_ctx.model_dump(),
+    }
 ```
 
 ## Working with Dependencies
@@ -57,31 +51,35 @@ async def whoami(ctx: AuthContext, client: InstallationClient) -> WhoAmIResponse
 the JWT token.  Import and inject it with `Annotated`:
 
 ```python
-from app.auth import AuthContext
+from app.dependencies import AuthContext
 
 @router.get("/example")
 async def example(ctx: AuthContext) -> ...:
     print(ctx.account_id)      # str — always present
     print(ctx.account_type)    # str — always present
-    print(ctx.installation_id) # str — always present
+    print(ctx.installation_id) # str | None
     print(ctx.user_id)         # str | None
     print(ctx.token_id)        # str | None
 ```
 
 See [docs/injectable-dependencies.md](injectable-dependencies.md) for the full reference.
 
-### InstallationClient
+### ExtensionContext
 
-`InstallationClient` provides an authenticated `httpx` client scoped to the current
-installation.  Use its helper methods instead of making raw HTTP calls:
+`ExtensionContext` provides runtime metadata for the running extension instance.
+Use it to access values like the current extension and instance IDs.
 
 ```python
-from app.client import InstallationClient
+from app.dependencies import ExtensionContext
 
-@router.get("/management/account")
-async def get_account(ctx: AuthContext, client: InstallationClient) -> dict:
-    """Return the account information for the current installation."""
-    return await client.get_account(ctx.account_id)
+@router.get("/me")
+async def example(ext_ctx: ExtensionContext) -> dict:
+    return {
+        "extension_id": ext_ctx.extension_id,
+        "instance_id": ext_ctx.instance_id,
+        "account_id": ext_ctx.account_id,
+        "domain": ext_ctx.domain,
+    }
 ```
 
 ## Defining Response Models
@@ -106,36 +104,25 @@ class OrderSummary(BaseSchema):
 ## Complete Example
 
 ```python
-import logging
-from typing import Annotated
-
-from pydantic import Field
-
-from app.auth import AuthContext
-from app.client import InstallationClient
-from app.schema import BaseSchema
-
-logger = logging.getLogger(__name__)
+from app.dependencies import AuthContext, ExtensionContext
 
 
-class AccountDetails(BaseSchema):
-    id: Annotated[str, Field(description="Platform account ID.")]
-    name: Annotated[str, Field(description="Account display name.")]
-    type: Annotated[str, Field(description="Account type.")]
-
-
-@router.get("/management/account")  # full path: /api/v1/management/account
-async def get_account(ctx: AuthContext, client: InstallationClient) -> AccountDetails:
-    """Return details of the account associated with the current installation."""
-    logger.info("Fetching account %s", ctx.account_id)
-    raw = await client.get_account(ctx.account_id)
-    return AccountDetails.model_validate(raw)
+@router.get("/me")
+async def who_am_i(
+    auth_ctx: AuthContext,
+    ext_ctx: ExtensionContext,
+) -> dict:
+    """Return caller identity and extension runtime context."""
+    return {
+        "auth": auth_ctx.model_dump(),
+        "ext": ext_ctx.model_dump(),
+    }
 ```
 
 ## Best Practices
 
 1. **Always type-annotate** handler parameters and return values.
-2. **Use dependency injection** (`AuthContext`, `InstallationClient`) — never parse auth headers
+2. **Use dependency injection** (`AuthContext`, `ExtensionContext`) — never parse auth headers
    manually or instantiate HTTP clients inside handlers.
 3. **Define Pydantic models** for non-trivial request/response shapes instead of returning raw dicts.
 4. **Log with `logging.getLogger(__name__)`** — avoid `print`.
@@ -149,7 +136,7 @@ async def get_account(ctx: AuthContext, client: InstallationClient) -> AccountDe
 
 ## See Also
 
-- [Injectable Dependencies](injectable-dependencies.md) — Full reference for `AuthContext` and `InstallationClient`
+- [Injectable Dependencies](injectable-dependencies.md) — Full reference for `AuthContext`, `ExtensionContext`, `InstallationClient`, and `ExtensionClient`
 - [Platform Context](platform-context.md) — Extension development guide for agents
 - [Adding Unauthenticated Endpoints](adding-unauthenticated-endpoints.md) — Bypass routes without auth
 - [routers/api.py](../backend/app/routers/api.py) — Authenticated API router

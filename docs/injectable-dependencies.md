@@ -1,6 +1,6 @@
 # Injectable Dependencies
 
-This extension provides three key injectable dependencies for use in FastAPI route handlers: `AuthContext`, `InstallationClient`, and `ExtensionClient`.
+This extension provides four key injectable dependencies for use in FastAPI route handlers: `AuthContext`, `ExtensionContext`, `InstallationClient`, and `ExtensionClient`.
 
 ## AuthContext
 
@@ -9,11 +9,10 @@ The `AuthContext` dependency provides authentication and authorization informati
 ### Usage
 
 ```python
-from app.auth import AuthContext
+from app.dependencies import AuthContext
 
 @router.get("/example")
 async def example_endpoint(ctx: AuthContext):
-    # Access authentication context
     print(ctx.account_id)
     print(ctx.installation_id)
     print(ctx.user_id)
@@ -37,6 +36,34 @@ The `AuthContext` dependency:
 4. If `installation_id` is not in the token, it resolves it by querying the Marketplace API
 5. Returns a structured `AuthContext` object with all authentication details
 
+## ExtensionContext
+
+The `ExtensionContext` dependency provides runtime metadata about the running extension instance.
+
+### Usage
+
+```python
+from app.dependencies import ExtensionContext
+
+@router.post("/events/orders")
+async def process_order(ext_ctx: ExtensionContext):
+    instance_id = ext_ctx.instance_id
+    extension_id = ext_ctx.extension_id
+    return {"instance_id": instance_id, "extension_id": extension_id}
+```
+
+### Available Properties
+
+- **`extension_id`** (`str`): The extension ID
+- **`instance_id`** (`str`): The extension instance ID
+- **`account_id`** (`str`): The vendor account ID
+- **`domain`** (`str`): The platform domain for this runtime
+
+### Common Use Cases
+
+- Supplying `instance_id` when starting platform tasks: `ext_client.start_task(task_id, ext_ctx.instance_id)`
+- Reading extension runtime metadata without parsing headers or config manually
+
 ## InstallationClient
 
 The `InstallationClient` dependency provides an authenticated HTTP client configured for the current installation's scope. It acts on behalf of a specific customer installation.
@@ -44,7 +71,7 @@ The `InstallationClient` dependency provides an authenticated HTTP client config
 ### Usage
 
 ```python
-from app.client import InstallationClient
+from app.dependencies import InstallationClient
 
 @router.get("/management/whoami")
 async def whoami(client: InstallationClient, ctx: AuthContext):
@@ -68,21 +95,21 @@ The `ExtensionClient` dependency provides an authenticated HTTP client configure
 ### Usage
 
 ```python
-from app.client import ExtensionClient
+from app.dependencies import ExtensionClient
 
 @router.get("/vendor-data")
 async def vendor_endpoint(client: ExtensionClient):
-    # Authenticate as the extension vendor
     user = await client.get_user(user_id)
     return user
 ```
 
 See [MPT Client](mpt-client.md) for detailed information on usage, extending the client, and other available methods.
 
-## Why Three Dependencies?
+## Why Four Dependencies?
 
 - **`AuthContext`**: Provides "who is making the request" information
+- **`ExtensionContext`**: Provides "which extension runtime is executing" information
 - **`InstallationClient`**: Provides "how to call the API on behalf of a specific customer installation" functionality
 - **`ExtensionClient`**: Provides "how to call the API on behalf of the extension vendor" functionality
 
-They work together: `AuthContext` identifies the caller, `InstallationClient` uses that identity to create an authorization-scoped API client, and `ExtensionClient` operates at the vendor level without customer context.
+They work together: `AuthContext` identifies the caller, `ExtensionContext` identifies the running extension instance, `InstallationClient` uses caller identity to create an authorization-scoped API client, and `ExtensionClient` operates at the vendor level.

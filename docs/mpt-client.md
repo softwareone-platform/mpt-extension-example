@@ -36,7 +36,7 @@ The `MPTClient` provides:
 ### Installation-Scoped (Via Dependency Injection)
 
 ```python
-from app.client import InstallationClient
+from app.dependencies import InstallationClient
 
 @router.get("/my-endpoint")
 async def my_endpoint(client: InstallationClient):
@@ -48,7 +48,7 @@ async def my_endpoint(client: InstallationClient):
 ### Vendor-Scoped (Via Dependency Injection)
 
 ```python
-from app.client import ExtensionClient
+from app.dependencies import ExtensionClient
 
 @router.get("/vendor-endpoint")
 async def vendor_endpoint(client: ExtensionClient):
@@ -57,15 +57,15 @@ async def vendor_endpoint(client: ExtensionClient):
     return user
 ```
 
-### Via Utility Function
+### Via Dependency in a Worker Function
 
 ```python
-from app.client import get_installation_client
+from app.dependencies import InstallationClient
 
-async def process_data(account_id: str):
-    client = get_installation_client(account_id)
+async def process_data(client: InstallationClient) -> None:
     async for order in client.get_orders(query="eq(status,Completed)", select=["-agreement"]):
         # do something with the order
+        ...
 ```
 
 ## Extending the Client
@@ -78,6 +78,8 @@ The `MPTClient` provides base methods that you can compose to build domain-speci
 - **`create(endpoint, payload)`** - Create a new resource
 - **`update(endpoint, id, payload)`** - Update an existing resource
 - **`delete(endpoint, id)`** - Delete a resource
+- **`count(endpoint, query)`** - Count items in a collection
+- **`first(endpoint, query, select)`** - Fetch the first item from a collection
 - **`get_page(endpoint, limit, offset, query, select)`** - Fetch a paginated page
 - **`collection_iterator(endpoint, query, select)`** - Iterate over all items in a collection
 

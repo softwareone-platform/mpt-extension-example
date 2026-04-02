@@ -5,12 +5,15 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from yaml import safe_load
 
 from app.config import settings
 
-_JINJA_ENV = Environment(loader=FileSystemLoader(Path(__file__).parent.parent.parent.resolve()))
+_JINJA_ENV = Environment(
+    loader=FileSystemLoader(Path(__file__).parent.parent.parent.resolve()),
+    undefined=StrictUndefined,
+)
 
 
 def get_instance_external_id():

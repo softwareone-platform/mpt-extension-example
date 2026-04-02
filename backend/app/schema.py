@@ -1,4 +1,6 @@
+import json
 from datetime import datetime
+from pathlib import Path
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -6,6 +8,8 @@ from pydantic import (
     ConfigDict,
     Field,
 )
+
+from app.utils import get_instance_external_id
 
 
 class BaseSchema(BaseModel):
@@ -19,10 +23,28 @@ class BaseSchema(BaseModel):
 class AuthContext(BaseSchema):
     account_id: str
     account_type: str
-    installation_id: str
+    installation_id: str | None = None
     user_id: str | None = None
     token_id: str | None = None
 
+
+class ExtensionContext(BaseSchema):
+    extension_id: str
+    instance_id: str
+    account_id: str
+    domain: str
+
+    @classmethod
+    def from_identity_file(cls) -> ExtensionContext:
+        external_id = get_instance_external_id()
+        identity_file = Path(__file__).parent.parent.parent.resolve() / f"{external_id}_identity.json"
+        data = json.load(open(identity_file))
+        return cls(
+            extension_id=data["mrok"]["extension"],
+            instance_id=data["mrok"]["instance"],
+            account_id=data["mrok"]["tags"]["accountId"],
+            domain=data["mrok"]["domain"],
+        )
 
 class Object(BaseSchema):
     id: Annotated[
