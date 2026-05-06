@@ -1,0 +1,9 @@
+// Wizard step circle uses line-height + vertical-align for centering,
+// which breaks when * { line-height } overrides the SVG's inherited value.
+// Switch to flex centering for reliable layout.
+[class*="wizard__step__index"] {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

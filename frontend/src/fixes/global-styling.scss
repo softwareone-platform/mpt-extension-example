@@ -1,0 +1,14 @@
+@use '~@softwareone-platform/sdk-react-ui-v0/design-tokens' as *;
+
+// Platform assumes box-sizing: border-box globally.
+// Without it, design system components (e.g. Grid) overflow by border width.
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// Base typography for all elements, matching platform defaults.
+* {
+  @extend %regular2;
+}

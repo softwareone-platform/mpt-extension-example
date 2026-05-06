@@ -1,0 +1,36 @@
+@use '@softwareone-platform/sdk-react-ui-v0/design-tokens' as *;
+@use '@softwareone-platform/sdk-react-ui-v0/design-tokens/style';
+@use 'fixes/global-styling';
+@use 'fixes/wizard';
+
+$gray-background: var(--gray-1);
+$radius-s: var(--radius-s);
+$radius-m: var(--radius-m);
+$block-space: var(--spacing-3);
+
+h1, .__h1 {
+  @extend %regular6;
+}
+
+h2, .__h2 {
+  @extend %regular5;
+}
+
+h3, .__h3 {
+  @extend %regular4;
+}
+
+code, .__code {
+  background-color: $gray-background;
+  padding: 2px 6px;
+  border-radius: $radius-s;
+  font-family: monospace;
+}
+
+pre, .__pre {
+  background-color: $gray-background;
+  padding: $block-space;
+  border-radius: $radius-m;
+  overflow-x: auto;
+}
+

@@ -104,6 +104,7 @@ High-level layout:
 - `static/`: generated frontend bundles served by backend
 - `docs/`: additional technical documentation
 - root config files: `meta.yaml`, `settings.yaml`, `compose.yaml`, `Dockerfile`
+- `LLM.md`: canonical agent-instructions body — after editing, run `uv run python tools/sync-llm.py` to mirror it into `CLAUDE.md`, `AGENTS.md`, and `.github/copilot-instructions.md`.
 
 ### Key Components
 

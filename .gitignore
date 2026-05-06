@@ -175,3 +175,28 @@ bandit.json
 # extension specific
 .secrets.yaml
 *_identity.json
+
+# Dependencies
+/frontend/node_modules/
+
+# Build output
+/static/
+
+# Coverage
+/frontend/coverage/
+
+# Logs
+/frontend/*.log
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/pnpm-debug.log*
+
+# Environment files
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.*.local
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

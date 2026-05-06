@@ -1,12 +1,3 @@
-# CLAUDE.md — SoftwareOne Marketplace Platform Extension
-
-Reference document for Claude Code agents working in this repository.
-
----
-
-<!-- The block below mirrors LLM.md and is rewritten by `uv run python tools/sync-llm.py`. Edit LLM.md for shared content; edit this file only for the per-tool header above. -->
-
-<!-- CONTENT -->
 ## Mandatory Development Checklist
 
 - [ ] Follow Python 3.12 type annotations for Python code changes.
@@ -263,4 +254,3 @@ No changes to `esbuild.config.js` or `frontend/src/modules/add` are needed in ei
 | Adding event handlers | `docs/adding-event-handlers.md` |
 | Adding authenticated REST endpoints | `docs/adding-api-endpoints.md` |
 | Adding unauthenticated endpoints | `docs/adding-unauthenticated-endpoints.md` |
-<!-- /CONTENT -->

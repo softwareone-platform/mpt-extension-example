@@ -5,3 +5,137 @@ events:
     condition: "and(eq(status,Processing),eq(product.id,{{ settings.product_id }}))"
     path: "/events/commerce/orders"
     task: true
+plugs:
+  - id: learn-extensions
+    name: Learn about extensions
+    description: Extensions are a powerful tool that allows customizing platform experience with your own scenarios and features
+    socket: portal
+
+  - id: guide
+    name: Guide
+    description: Read about essential basics of extensions development
+    socket: portal.learn-extensions
+    href: /static/guide.js
+
+  - id: examples
+    name: Examples
+    description: Learn more about extensions UI SDK and its capabilities
+    socket: portal.learn-extensions
+    href: /static/examples.js
+
+  - id: dialog
+    name: Dialog example
+    href: /static/dialog.js
+
+  - id: wizard
+    name: Wizard example
+    href: /static/wizard.js
+
+  # Convention for the "add" demo module: each plug below reuses the single
+  # src/modules/add entry, but must declare its own `href` of the form
+  # /static/add/{socket}.js. frontend/esbuild.config.js reads this file and
+  # emits one per-socket bundle (with __SOCKET_ID__ baked in) for every plug
+  # whose href starts with /static/add/. A new add-* plug is picked up
+  # automatically — just keep the href in sync with the socket.
+  - id: add-main-navigation
+    name: Plug here
+    description: Add your extension plug
+    socket: portal
+    href: /static/add/portal.js
+
+  - id: add-commerce-orders-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.orders.actions
+    href: /static/add/portal.commerce.orders.actions.js
+
+  - id: add-commerce-orders-line-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.orders.line.actions
+    href: /static/add/portal.commerce.orders.line.actions.js
+
+  - id: add-commerce-order-details-tab
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.orders.order
+    href: /static/add/portal.commerce.orders.order.js
+
+  - id: add-commerce-order-details-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.orders.order.actions
+    href: /static/add/portal.commerce.orders.order.actions.js
+
+  - id: add-commerce-subscriptions-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.subscriptions.actions
+    href: /static/add/portal.commerce.subscriptions.actions.js
+
+  - id: add-commerce-subscriptions-line-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.subscriptions.line.actions
+    href: /static/add/portal.commerce.subscriptions.line.actions.js
+
+  - id: add-commerce-subscription-details-tab
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.subscriptions.subscription
+    href: /static/add/portal.commerce.subscriptions.subscription.js
+
+  - id: add-commerce-subscription-details-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.subscriptions.subscription.actions
+    href: /static/add/portal.commerce.subscriptions.subscription.actions.js
+
+  - id: add-commerce-agreements-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.agreements.actions
+    href: /static/add/portal.commerce.agreements.actions.js
+
+  - id: add-commerce-agreements-line-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.agreements.line.actions
+    href: /static/add/portal.commerce.agreements.line.actions.js
+
+  - id: add-commerce-agreements-details-tab
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.agreements.agreement
+    href: /static/add/portal.commerce.agreements.agreement.js
+
+  - id: add-commerce-agreements-details-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.agreements.agreement.actions
+    href: /static/add/portal.commerce.agreements.agreement.actions.js
+
+
+  - id: add-commerce-assets-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.assets.actions
+    href: /static/add/portal.commerce.assets.actions.js
+
+  - id: add-commerce-assets-line-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.assets.line.actions
+    href: /static/add/portal.commerce.assets.line.actions.js
+
+  - id: add-commerce-assets-details-tab
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.assets.asset
+    href: /static/add/portal.commerce.assets.asset.js
+
+  - id: add-commerce-assets-details-action
+    name: Plug here
+    description: Add your extension plug
+    socket: portal.commerce.assets.asset.actions
+    href: /static/add/portal.commerce.assets.asset.actions.js
