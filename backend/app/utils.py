@@ -1,8 +1,11 @@
 import base64
+import hashlib
 import json
+import os
+import socket
 import subprocess
-import uuid
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
@@ -16,40 +19,36 @@ _JINJA_ENV = Environment(
 )
 
 
-def get_instance_external_id():
-    result = subprocess.run(
-        ["cat", "/proc/1/cpuset"],
-        capture_output=True,
-        stdin=subprocess.DEVNULL,
-        start_new_session=True,
-    )
-    try:
-        result.check_returncode()
-    except subprocess.CalledProcessError:
-        return f"{uuid.getnode():012x}"
+@lru_cache(maxsize=1)
+def get_instance_external_id() -> str:
+    hostname = (os.environ.get("HOSTNAME") or socket.gethostname() or "").lower()
+    if len(hostname) == 12 and all(c in "0123456789abcdef" for c in hostname.lower()):
+        return hostname
 
-    _, container_id = result.stdout.decode()[:-1].rsplit("/", 1)
-    if len(container_id) == 64:
-        return container_id[:12]
-
-    result = subprocess.run(
-        ["grep", "overlay", "/proc/self/mountinfo"],
-        capture_output=True,
-        stdin=subprocess.DEVNULL,
-        start_new_session=True,
-    )
     try:
-        result.check_returncode()
+        with open("/proc/1/cpuset") as f:
+            tail = f.read().strip().rsplit("/", 1)[-1]
+        if len(tail) == 64:
+            return tail[:12]
+    except OSError:
+        pass
+
+    try:
+        result = subprocess.run(
+            ["grep", "overlay", "/proc/self/mountinfo"],
+            capture_output=True, stdin=subprocess.DEVNULL, check=True,
+        )
         mount = result.stdout.decode()
-        start_idx = mount.index("upperdir=") + len("upperdir=")
-        end_idx = mount.index(",", start_idx)
-        dir_path = mount[start_idx:end_idx]
-        _, container_id, _ = dir_path.rsplit("/", 2)
-        if len(container_id) != 64:
-            return f"{uuid.getnode():012x}"
-        return container_id[:12]
-    except (subprocess.CalledProcessError, ValueError):
-        return f"{uuid.getnode():012x}"
+        start = mount.index("upperdir=") + len("upperdir=")
+        end = mount.index(",", start)
+        cid = mount[start:end].rsplit("/", 2)[1]
+        if len(cid) == 64:
+            return cid[:12]
+    except (subprocess.CalledProcessError, ValueError, OSError):
+        pass
+
+    seed = hostname or os.environ.get("HOSTNAME", "") or "unknown-host"
+    return hashlib.sha256(seed.encode()).hexdigest()[:12]
 
 
 def get_meta():
