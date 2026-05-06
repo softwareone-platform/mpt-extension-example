@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "swo-design-system": {
+      "type": "stdio",
+      "command": "bash",
+      "args": [
+        "-c",
+        "cd frontend && npx -y @swo/design-system-mcp"
+      ],
+      "env": {}
+    }
+  }
+}

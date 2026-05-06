@@ -1,0 +1,41 @@
+.add-plug {
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+
+  &__output {
+    position: relative;
+  }
+
+  &__copy {
+    position: absolute;
+    top: var(--spacing-1);
+    right: var(--spacing-1);
+  }
+
+  &__format-toggle {
+    display: flex;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+  }
+
+  &__context {
+    summary {
+      cursor: pointer;
+      user-select: none;
+      padding: var(--spacing-1) 0;
+    }
+
+    pre {
+      margin: var(--spacing-1) 0 0;
+      padding: var(--spacing-2);
+      background: var(--surface-secondary, #f5f5f5);
+      border-radius: var(--radius-1, 4px);
+      max-height: 240px;
+      overflow: auto;
+      font-size: 12px;
+    }
+  }
+}

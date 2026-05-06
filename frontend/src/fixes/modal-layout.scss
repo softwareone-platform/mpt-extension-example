@@ -1,0 +1,30 @@
+.dialog {
+  display: flex;
+  flex-direction: column;
+
+  &__header {
+    padding: var(--spacing-3);
+    border-bottom: 2px solid;
+    border-image: linear-gradient(259deg, #00c9cd 16.32%, #472aff 59.03%, #392d9c 99.99%) 1;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 26px;
+    margin: 0;
+  }
+
+  &__content {
+    padding: var(--spacing-3);
+    overflow: auto;
+    flex-grow: 1;
+  }
+
+  &__actions {
+    padding: var(--spacing-3);
+    border-top: 1px solid var(--gray-3);
+    display: flex;
+    justify-content: space-between;
+  }
+}

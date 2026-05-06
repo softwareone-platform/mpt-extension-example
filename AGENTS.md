@@ -1,6 +1,6 @@
-# CLAUDE.md — SoftwareOne Marketplace Platform Extension
+# AGENTS.md — SoftwareOne Marketplace Platform Extension
 
-Reference document for Claude Code agents working in this repository.
+Reference document for OpenAI Codex and other AGENTS.md-aware agent frameworks working in this repository.
 
 ---
 
