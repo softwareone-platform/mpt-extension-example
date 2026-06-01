@@ -17,8 +17,8 @@
     "../static"
   ],
   "dependencies": {
-    "@mpt-extension/sdk": "^0.0.5",
-    "@mpt-extension/sdk-react": "^0.0.5",
+    "@mpt-extension/sdk": "^0.0.7",
+    "@mpt-extension/sdk-react": "^0.0.7",
     "@softwareone-platform/rql-client": "^0.1.1",
     "@softwareone-platform/sdk-react-ui-v0": "^0.0.2",
     "axios": "1.15.0",
