@@ -3,13 +3,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.schema import ExtensionContext
 from app.routers import api, bypass, events
 
-
-def lifespan(app: FastAPI):
-    app.app.state.ctx = ExtensionContext.from_identity_file()
-    yield
 
 
 app = FastAPI(
@@ -20,7 +15,6 @@ app = FastAPI(
     openapi_url="/bypass/openapi.json",
     docs_url="/bypass/docs",
     redoc_url="/bypass/redoc",
-    lifespan=lifespan,
 )
 
 app.mount(

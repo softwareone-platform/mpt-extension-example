@@ -14,6 +14,8 @@ security = HTTPBearer()
 
 
 def _get_extension_context(request: Request) -> _ExtensionContext:
+    if not hasattr(request.app.state, "ctx"):
+        request.app.state.ctx = _ExtensionContext.from_identity_file()
     return request.app.state.ctx
 
 
